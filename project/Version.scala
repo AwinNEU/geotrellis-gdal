@@ -17,7 +17,7 @@
 object Version {
   val geotrellisGdal  = "0.13.0" + Environment.versionSuffix
   val scala           = "2.11.12"
-  val geotrellis      = "1.2.1"
+  val geotrellis      = "3.0.0-SNAPSHOT"
   val gdal            = "2.3.2"
   lazy val hadoop     = Environment.hadoopVersion
   lazy val spark      = Environment.sparkVersion

@@ -150,9 +150,9 @@ class RasterBand(band: Band, cols: Int, rows: Int) {
           FloatArrayTile(dataFloat, cols, rows)
         case geotrellis.raster.DoubleConstantNoDataCellType =>
           DoubleArrayTile(dataDouble, cols, rows)
-        case geotrellis.raster.ByteConstantNoDataCellType => ???
-        case geotrellis.raster.UByteConstantNoDataCellType => ???
-        case geotrellis.raster.UShortConstantNoDataCellType => ???
+        // case geotrellis.raster.ByteConstantNoDataCellType => ???
+        // case geotrellis.raster.UByteConstantNoDataCellType => ???
+        // case geotrellis.raster.UShortConstantNoDataCellType => ???
       }).mutable
 
     // Replace NODATA values

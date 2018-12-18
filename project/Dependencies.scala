@@ -19,12 +19,14 @@ import sbt._
 object Dependencies {
   val gdal = "org.gdal" % "gdal" % Version.gdal
 
-  val geotrellisRaster       = "org.locationtech.geotrellis" %% "geotrellis-raster"        % Version.geotrellis
-  val geotrellisSpark        = "org.locationtech.geotrellis" %% "geotrellis-spark"         % Version.geotrellis
-  val geotrellisSparkEtl     = "org.locationtech.geotrellis" %% "geotrellis-spark-etl"     % Version.geotrellis
-  val geotrellisSparkTestkit = "org.locationtech.geotrellis" %% "geotrellis-spark-testkit" % Version.geotrellis
+  val geotrellisRaster        = "org.locationtech.geotrellis" %% "geotrellis-raster"         % Version.geotrellis
+  val geotrellisRasterTestkit = "org.locationtech.geotrellis" %% "geotrellis-raster-testkit" % Version.geotrellis
+  val geotrellisSpark         = "org.locationtech.geotrellis" %% "geotrellis-spark"          % Version.geotrellis
+  val geotrellisSparkEtl      = "org.locationtech.geotrellis" %% "geotrellis-spark-etl"      % Version.geotrellis
+  val geotrellisSparkTestkit  = "org.locationtech.geotrellis" %% "geotrellis-spark-testkit"  % Version.geotrellis
 
   val sparkCore    = "org.apache.spark"  %% "spark-core"    % Version.spark
+  val sparkSQL     = "org.apache.spark"  %% "spark-sql"     % Version.spark
   val hadoopClient = "org.apache.hadoop" %  "hadoop-client" % Version.hadoop
 
   val scalaTest  = "org.scalatest" %% "scalatest" % "3.0.5"

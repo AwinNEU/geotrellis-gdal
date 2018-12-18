@@ -16,19 +16,18 @@
 
 package geotrellis.gdal.io.hadoop
 
+import java.util.regex.Pattern
+
 import geotrellis.gdal.io.hadoop.GdalInputFormat._
 import geotrellis.gdal.{Gdal, GdalReader, RasterBand, RasterDataSet}
 import geotrellis.proj4.{CRS, LatLng}
 import geotrellis.raster._
 import geotrellis.spark.io.hadoop.HdfsUtils
 import geotrellis.spark.io.hadoop.HdfsUtils._
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
-import org.apache.hadoop.mapreduce.{InputSplit, JobContext, RecordReader, TaskAttemptContext}
 import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat, FileSplit}
-
-import java.util.regex.Pattern
+import org.apache.hadoop.mapreduce.{InputSplit, JobContext, RecordReader, TaskAttemptContext}
 
 /**
   * This class uses GDAL to attempt to read a raster file.

@@ -1,9 +1,8 @@
 package geotrellis.gdal
 
 import geotrellis.raster._
-import geotrellis.raster.resample.{NearestNeighbor, Bilinear}
+import geotrellis.raster.resample._
 import geotrellis.raster.testkit._
-import geotrellis.raster.io.geotiff._
 
 import org.scalatest._
 

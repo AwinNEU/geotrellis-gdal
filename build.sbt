@@ -75,8 +75,33 @@ lazy val root = (project in file("."))
 lazy val `gdal-etl` = project
   .settings(commonSettings: _*)
   .settings(name := "geotrellis-spark-gdal-etl")
+  .settings(libraryDependencies ++= Seq(
+    Dependencies.geotrellisSpark % Provided,
+    Dependencies.geotrellisSparkEtl % Provided,
+    Dependencies.sparkCore % Provided,
+    Dependencies.hadoopClient % Provided
+  ))
+  .dependsOn(`gdal`, `gdal-spark`)
+
+lazy val `gdal-spark` = project
+  .settings(commonSettings: _*)
+  .settings(name := "geotrellis-gdal-spark")
+  .settings(libraryDependencies ++= Seq(
+    Dependencies.geotrellisSpark % Provided,
+    Dependencies.geotrellisSparkTestkit % Test,
+    Dependencies.sparkCore % Provided,
+    Dependencies.sparkSQL % Provided,
+    Dependencies.hadoopClient % Provided,
+    Dependencies.scalaTest % Test
+  ))
   .dependsOn(`gdal`)
 
 lazy val `gdal` = project
   .settings(commonSettings: _*)
   .settings(name := "geotrellis-gdal")
+  .settings(libraryDependencies ++= Seq(
+    Dependencies.geotrellisRaster % Provided,
+    Dependencies.geotrellisRasterTestkit % Test,
+    Dependencies.gdal,
+    Dependencies.scopt
+  ))

@@ -1,20 +1,15 @@
 package geotrellis.gdal
 
-import geotrellis.gdal.io.hadoop.GdalInputFormat.{GdalFileInfo, GdalRasterInfo}
-import geotrellis.gdal.io.hadoop._
 import geotrellis.proj4._
 import geotrellis.raster._
 import geotrellis.raster.testkit._
 import geotrellis.raster.io.geotiff._
-import geotrellis.spark.testkit.TestEnvironment
 
-import org.apache.spark.rdd.RDD
 import org.scalatest._
 
 class GdalReaderSpec extends FunSpec
   with RasterMatchers
   with OnlyIfGdalInstalled
-  with TestEnvironment
 {
 
   val path = "src/test/resources/data/slope.tif"
@@ -104,19 +99,6 @@ class GdalReaderSpec extends FunSpec
 
           assertEqual(actualTile, expectedTile)
         }
-      }
-
-      it("should load a JPEG2000 into an RDD") {
-        val tileRdd: RDD[(GdalRasterInfo, Tile)] =
-          sc.gdalRDD(new org.apache.hadoop.fs.Path(jpeg2000Path))
-
-        val first = tileRdd.first()
-        val fileInfo: GdalFileInfo = first._1.file
-        val tile: Tile = first._2
-
-        fileInfo.rasterExtent.cols should be (lengthExpected)
-        fileInfo.rasterExtent.rows should be (lengthExpected)
-        tile.cellType shouldBe a [TypeExpected]
       }
     }
   }
