@@ -8,7 +8,7 @@ lazy val commonSettings = Seq(
   organization := "com.azavea.geotrellis",
   name := "geotrellis-gdal",
   licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html")),
-  headerLicense := Some(HeaderLicense.ALv2("2017", "Azavea")),
+  headerLicense := Some(HeaderLicense.ALv2("2018", "Azavea")),
   scalacOptions ++= Seq(
     "-deprecation", "-unchecked", "-feature",
     "-language:implicitConversions",
