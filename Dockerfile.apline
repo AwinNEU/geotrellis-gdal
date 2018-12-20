@@ -21,6 +21,7 @@ ADD https://www.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.g
 # Install basic dependencies
 RUN apk update && apk add \
     build-base \
+    curl-dev \
     gcc \
     abuild \
     binutils \
