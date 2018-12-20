@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Azavea
+ * Copyright 2018 Azavea
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,29 +14,10 @@
  * limitations under the License.
  */
 
-package geotrellis.gdal
+package geotrellis.gdal.config
 
-import org.gdal.gdal.GCP
+import pureconfig.{CamelCase, ConfigFieldMapping, ProductHint}
 
-case class GroundControlPoint(
-  id: String,
-  info: String,
-  col: Double,
-  row: Double,
-  x: Double,
-  y: Double,
-  z: Double
-)
-
-object GroundControlPoint {
-  def apply(gcp: GCP): GroundControlPoint =
-    GroundControlPoint(
-      gcp.getId,
-      gcp.getInfo,
-      gcp.getGCPPixel,
-      gcp.getGCPLine,
-      gcp.getGCPX,
-      gcp.getGCPY,
-      gcp.getGCPZ
-    )
+trait PureConfigSettings {
+  implicit def hint[T]: ProductHint[T] = ProductHint[T](ConfigFieldMapping(CamelCase, CamelCase))
 }

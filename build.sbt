@@ -9,16 +9,14 @@ lazy val commonSettings = Seq(
   licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html")),
   headerLicense := Some(HeaderLicense.ALv2("2017", "Azavea")),
   scalacOptions ++= Seq(
-    "-deprecation",
-    "-unchecked",
-    "-feature",
+    "-deprecation", "-unchecked", "-feature",
     "-language:implicitConversions",
     "-language:reflectiveCalls",
     "-language:higherKinds",
     "-language:postfixOps",
     "-language:existentials",
     "-language:experimental.macros",
-    "-feature"
+    "-Ypartial-unification" // Required by Cats
   ),
   bintrayOrganization := Some("azavea"),
   bintrayRepository := "geotrellis",
@@ -27,6 +25,8 @@ lazy val commonSettings = Seq(
   publishMavenStyle := true,
   publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
+  addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.4" cross CrossVersion.binary),
+  addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.1" cross CrossVersion.full),
   shellPrompt := { s => Project.extract(s).currentProject.id + " > " },
   pomExtra := (
     <scm>

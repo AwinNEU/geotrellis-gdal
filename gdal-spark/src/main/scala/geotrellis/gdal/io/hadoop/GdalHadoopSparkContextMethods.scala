@@ -20,6 +20,7 @@ import geotrellis.gdal.io.hadoop.GdalInputFormat._
 import geotrellis.raster._
 import geotrellis.spark.TemporalProjectedExtent
 import geotrellis.spark.io.hadoop.{HadoopSparkContextMethods, _}
+
 import org.apache.hadoop.fs.Path
 import org.apache.spark.rdd.RDD
 

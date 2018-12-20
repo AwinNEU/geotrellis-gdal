@@ -16,41 +16,39 @@
 
 package geotrellis.gdal
 
-import org.gdal.gdal.gdal
-import org.gdal.osr.CoordinateTransformation
-import org.gdal.osr.SpatialReference
+import java.awt.Color
 
-import scala.collection.JavaConversions._
+import org.gdal.osr.{CoordinateTransformation, SpatialReference}
 
-object GdalInfo {
+object GDALInfo {
   def main(args:Array[String]): Unit =
-    GdalInfoOptions.parse(args) match {
+    GDALInfoOptions.parse(args) match {
       case Some(options) =>
         apply(options)
       case None =>
         // Argument errored, should have printed usage.
     }
 
-  def apply(options: GdalInfoOptions): Unit = {
-    gdal.AllRegister()
+  def apply(options: GDALInfoOptions): Unit = {
+    sgdal.AllRegister
 
-    val raster = Gdal.open(options.file.getAbsolutePath)
+    val raster = GDAL.open(options.file.getAbsolutePath)
 
-    val driver = raster.driver
+    val driver = raster.getDriver
 
     println(s"Driver: ${driver.getShortName}/${driver.getLongName}")
 
-    val fileList = raster.files
-    if(fileList.size == 0) {
+    val fileList = raster.getFileList
+    if(fileList.isEmpty) {
       println("Files: none associated")
     } else {
       println("Files:")
       for(f <- fileList) { println(s"       $f") }
     }
 
-    println(s"Size is ${raster.cols}, ${raster.rows}")
+    println(s"Size is ${raster.getRasterXSize}, ${raster.getRasterYSize}")
 
-    raster.projection match {
+    raster.getProjectionRef match {
       case Some(projection) =>
         val srs = new SpatialReference(projection)
         if(srs != null && projection.length != 0) {
@@ -65,7 +63,7 @@ object GdalInfo {
       case None =>
     }
 
-    val geoTransform = raster.geoTransform
+    val geoTransform = raster.getGeoTransform
 
     if (geoTransform(2) == 0.0 && geoTransform(4) == 0.0) {
       println(s"Origin = (${geoTransform(0)},${geoTransform(3)})")
@@ -76,16 +74,17 @@ object GdalInfo {
       println(s"  ${geoTransform(3)}, ${geoTransform(4)}, ${geoTransform(5)}")
     }
 
-    if(options.showGcps && raster.groundControlPointCount > 0) {
-      for((gcp, i) <- raster.groundControlPoints.zipWithIndex) {
-        println(s"GCP[$i]: Id=${gcp.id}, Info=${gcp.info}")
-        println(s"    (${gcp.col},${gcp.row}) (${gcp.x},${gcp.y},${gcp.z})")
+    if(options.showGcps && raster.getGCPCount > 0) {
+      for((gcp, i) <- raster.getGCPs.zipWithIndex) {
+        println(s"GCP[$i]: Id=${gcp.getId}, Info=${gcp.getInfo}")
+        // col, row, x, y, x
+        println(s"    (${gcp.getGCPPixel},${gcp.getGCPLine}) (${gcp.getGCPX},${gcp.getGCPY},${gcp.getGCPZ})")
       }
     }
 
     if(options.showMetadata) {
       def printMetadata(header: String, id: String = "") = {
-        val md = raster.metadata(id)
+        val md = raster.getMetadata_List(id)
         if(md.nonEmpty) {
           println(header)
           for(key <- md) {
@@ -114,15 +113,15 @@ object GdalInfo {
 
     println("Corner Coordinates:")
     reportCorner(raster, "Upper Left ", 0.0, 0.0)
-    reportCorner(raster, "Lower Left ", 0.0, raster.rows)
-    reportCorner(raster, "Upper Right", raster.cols, 0.0)
-    reportCorner(raster, "Lower Right", raster.cols, raster.rows)
-    reportCorner(raster, "Center     ", raster.cols / 2.0, raster.rows / 2.0)
+    reportCorner(raster, "Lower Left ", 0.0, raster.getRasterYSize)
+    reportCorner(raster, "Upper Right", raster.getRasterXSize, 0.0)
+    reportCorner(raster, "Lower Right", raster.getRasterXSize, raster.getRasterYSize)
+    reportCorner(raster, "Center     ", raster.getRasterXSize / 2.0, raster.getRasterYSize / 2.0)
 
-    for ((band, i) <- raster.bands.zipWithIndex) {
-      print(s"Band ${i+1} Block=${band.blockWidth}x${band.blockHeight} ")
-      println(s"Type=${band.rasterType}, ColorInterp=${band.colorName}")
-      band.description match {
+    for ((band, i) <- raster.getRasterBands().zipWithIndex) {
+      print(s"Band ${i+1} Block=${band.getBlockXSize}x${band.getBlockYSize} ")
+      println(s"Type=${band.getDataType}, ColorInterp=${band.getColorInterpretationName}")
+      band.getDescription match {
         case Some(description) => println(s"  Description = $description")
         case None =>
       }
@@ -132,7 +131,7 @@ object GdalInfo {
       // TODO: bucket count
       // TODO: checksum
 
-      band.noDataValue match {
+      band.getNoDataValue match {
         case Some(noDataValue) => println(s"  NoData Value=$noDataValue")
         case None =>
       }
@@ -142,9 +141,9 @@ object GdalInfo {
       // TODO: mask band overviews
       // TODO: unit type
 
-      if (band.categories.length > 0) {
+      if (band.getRasterCategoryNames.nonEmpty) {
         println( "  Categories:" )
-        for ((category, i) <- band.categories.zipWithIndex) {
+        for ((category, i) <- band.getRasterCategoryNames.zipWithIndex) {
           println(s"      $i: $category")
         }
       }
@@ -153,8 +152,8 @@ object GdalInfo {
       // TODO: scale
       // TODO: metadata
 
-      if (band.colorName == "Palette") {
-        band.colorTable match {
+      if (band.getColorInterpretationName == "Palette") {
+        RasterColor.printableColorTable(band) match {
           case Some((colorTable, name)) =>
             println(s"  Color Table ($name with ${colorTable.size} entries)")
             if (options.showColorTable) {
@@ -170,17 +169,17 @@ object GdalInfo {
     }
   }
 
-  def reportCorner(raster: RasterDataSet, cornerName: String, x: Double, y: Double) = {
+  def reportCorner(dataset: GDALDataset, cornerName: String, x: Double, y: Double) = {
     print(cornerName + " ")
-    if (raster.geoTransform.exists(_ != 0)) {
+    if (dataset.getGeoTransform.exists(_ != 0)) {
       println(s"($x,$y)")
     } else {
-      val gt = raster.geoTransform
+      val gt = dataset.getGeoTransform
       val geox = gt(0) + gt(1) * x + gt(2) * y
       val geoy = gt(3) + gt(4) * x + gt(5) * y
       print(f"($geox%12.3f,$geoy%12.3f) ")
 
-      raster.projection match {
+      dataset.getProjectionRef match {
         case Some(projection) =>
           val srs = new SpatialReference(projection)
           if (srs != null && projection.length != 0) {
@@ -190,8 +189,8 @@ object GdalInfo {
                 .CreateCoordinateTransformation(srs, latLong)
               if (transform != null) {
                 val point = transform.TransformPoint(geox, geoy, 0)
-                val xtrans = gdal.DecToDMS(point(0), "Long", 2)
-                val ytrans = gdal.DecToDMS(point(1), "Lat", 2)
+                val xtrans = sgdal.decToDMS(point(0), "Long", 2)
+                val ytrans = sgdal.decToDMS(point(1), "Lat", 2)
                 println(s"($xtrans,$ytrans)")
                 transform.delete()
               }
@@ -202,6 +201,18 @@ object GdalInfo {
           }
         case None => println()
       }
+    }
+  }
+}
+
+class RasterColor(color: Color) {
+  override def toString: String = s"${color.getRed},${color.getGreen},${color.getBlue},${color.getAlpha}"
+}
+
+object RasterColor {
+  def printableColorTable(band: GDALBand): Option[(Vector[RasterColor], String)] = {
+    Option(band.getRasterColorTable).map { ct =>
+      ((0 until ct.getCount).map { i => new RasterColor(ct.getColorEntry(i)) }.toVector, ct.getPaletteInterpretationName)
     }
   }
 }

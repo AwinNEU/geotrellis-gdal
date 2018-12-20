@@ -18,7 +18,7 @@ package geotrellis.gdal
 
 import java.io.File
 
-case class GdalInfoOptions(
+case class GDALInfoOptions(
   // -mm
   computeMinMax: Boolean = false,
   // -stats
@@ -43,8 +43,8 @@ case class GdalInfoOptions(
   file: File = null
 )
 
-object GdalInfoOptions {
-  val parser = new scopt.OptionParser[GdalInfoOptions]("gdalinfo") {
+object GDALInfoOptions {
+  val parser = new scopt.OptionParser[GDALInfoOptions]("gdalinfo") {
     head("gdalinfo")
 
     opt[Unit]("mm") action { (_, c) =>
@@ -94,16 +94,17 @@ object GdalInfoOptions {
     } text("Path to a GDAL supported raster dataset.")
   }
 
-  def parse(args: Array[String]): Option[GdalInfoOptions] =
-    parser.parse(args, GdalInfoOptions())
-          .flatMap { options =>
-            // Validate here where we don't want to print usage
-            // on failure.
-            if(!options.file.exists) {
-              System.err.println(s"ERROR: File ${options.file} does not exist.")
-              None
-            } else {
-              Some(options)
-            }
-          }
+  def parse(args: Array[String]): Option[GDALInfoOptions] =
+    parser.parse(args, GDALInfoOptions())
+      .flatMap { options =>
+        // Validate here where we don't want to print usage
+        // on failure.
+        if(!options.file.exists) {
+          System.err.println(s"ERROR: File ${options.file} does not exist.")
+          None
+        } else {
+          Some(options)
+        }
+      }
 }
+

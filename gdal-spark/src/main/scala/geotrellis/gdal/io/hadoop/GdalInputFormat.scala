@@ -16,18 +16,19 @@
 
 package geotrellis.gdal.io.hadoop
 
-import java.util.regex.Pattern
-
+import geotrellis.gdal._
 import geotrellis.gdal.io.hadoop.GdalInputFormat._
-import geotrellis.gdal.{Gdal, GdalReader, RasterBand, RasterDataSet}
 import geotrellis.proj4.{CRS, LatLng}
 import geotrellis.raster._
 import geotrellis.spark.io.hadoop.HdfsUtils
 import geotrellis.spark.io.hadoop.HdfsUtils._
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat, FileSplit}
 import org.apache.hadoop.mapreduce.{InputSplit, JobContext, RecordReader, TaskAttemptContext}
+
+import java.util.regex.Pattern
 
 /**
   * This class uses GDAL to attempt to read a raster file.
@@ -64,14 +65,14 @@ class GdalRecordReader extends RecordReader[GdalRasterInfo, Tile] {
   private val hasDriveLetterSpecifier = Pattern.compile("^/?[a-zA-Z]:")
   private var conf: Configuration = _
   private var file: LocalPath = _
-  private var rasterDataSet: RasterDataSet = _
-  private var reader: GdalReader = _
+  private var gdalDataset: GDALDataset = _
+  private var reader: GDALReader = _
   private var fileInfo: GdalFileInfo = _
 
   private var bandIndex: Int = 0
   private var bandCount: Int = _
 
-  private var band: RasterBand = null
+  private var band: GDALBand = null
   private var bandRaster: Raster[MultibandTile] = null
   private var bandMeta: Map[String, String] = _
 
@@ -87,15 +88,15 @@ class GdalRecordReader extends RecordReader[GdalRasterInfo, Tile] {
       hadoopfilename.tail
     else
       hadoopfilename
-    rasterDataSet   = Gdal.open(filename)
-    reader          = GdalReader(rasterDataSet)
-    bandCount       = rasterDataSet.bandCount
+    gdalDataset     = GDAL.open(filename)
+    reader          = GDALReader(gdalDataset)
+    bandCount       = gdalDataset.getRasterCount
 
     fileInfo =
       GdalFileInfo(
-        rasterExtent = rasterDataSet.rasterExtent,
-        crs          = rasterDataSet.crs.getOrElse(LatLng),
-        meta         = parseMeta(rasterDataSet.metadata)
+        rasterExtent = gdalDataset.rasterExtent,
+        crs          = gdalDataset.crs.getOrElse(LatLng),
+        meta         = parseMeta(gdalDataset.getMetadata_List("").toList)
       )
   }
 
@@ -109,10 +110,10 @@ class GdalRecordReader extends RecordReader[GdalRasterInfo, Tile] {
     val hasNext = bandIndex < bandCount  // bands are indexed from 1 to bandCount
     if (hasNext) {
       bandIndex += 1
-      band = rasterDataSet.band(bandIndex)
-      bandRaster = reader.read(bands = Seq(bandIndex - 1))
+      band = gdalDataset.getRasterBand(bandIndex)
+      bandRaster = reader.readRaster(bands = Seq(bandIndex - 1))
       bandMeta = band
-        .metadata
+        .getMetadata_List("").toList
         .map(_.split("="))
         .map(l => l(0) -> l(1))
         .toMap

@@ -7,7 +7,7 @@ import geotrellis.raster.io.geotiff._
 
 import org.scalatest._
 
-class GdalReaderSpec extends FunSpec
+class GDALReaderSpec extends FunSpec
   with RasterMatchers
   with OnlyIfGdalInstalled
 {
@@ -16,10 +16,10 @@ class GdalReaderSpec extends FunSpec
 
   describe("reading a GeoTiff") {
     ifGdalInstalled {
-      val reader = GdalReader(path)
+      val reader = GDALReader(path)
       it("should match one read with GeoTools") {
         println("Reading with GDAL...")
-        val raster = reader.read()
+        val raster = reader.readRaster()
         val gdRaster = raster.tile.band(0)
         val gdExt = raster.extent
         println("Reading with GeoTools....")
@@ -51,7 +51,7 @@ class GdalReaderSpec extends FunSpec
 
       it("should do window reads") {
         val gtiff = MultibandGeoTiff(path)
-        val gridBounds = reader.rasterDataSet.gridBounds.split(15, 21)
+        val gridBounds = reader.dataset.gridBounds.split(15, 21)
 
         gridBounds.map { case gb =>
           val actualTile = reader.read(gb).tile
@@ -62,8 +62,8 @@ class GdalReaderSpec extends FunSpec
       }
 
       it("should read CRS from file") {
-        val rasterDataSet = Gdal.open("src/test/resources/data/geotiff-test-files/all-ones.tif")
-        rasterDataSet.crs should equal(Some(LatLng))
+        val dataset = GDAL.open("src/test/resources/data/geotiff-test-files/all-ones.tif")
+        dataset.crs should equal(Some(LatLng))
       }
     }
   }
@@ -75,15 +75,15 @@ class GdalReaderSpec extends FunSpec
       val jpeg2000Path = "src/test/resources/data/jpeg2000-test-files/testJpeg2000.jp2"
       val jpegTiffPath = "src/test/resources/data/jpeg2000-test-files/jpegTiff.tif"
 
-      val dataset = Gdal.open(jpeg2000Path)
-      val jpegReader = GdalReader(dataset)
-      val tiffReader = GdalReader(jpegTiffPath)
+      val dataset = GDAL.open(jpeg2000Path)
+      val jpegReader = GDALReader(dataset)
+      val tiffReader = GDALReader(jpegTiffPath)
 
       val gridBounds: Iterator[GridBounds] =
         dataset.gridBounds.split(20, 15)
 
       it("should read a JPEG2000 from a file") {
-        val raster = jpegReader.read()
+        val raster = jpegReader.readRaster()
         val tile = raster.tile
         val extent = raster.rasterExtent
 
