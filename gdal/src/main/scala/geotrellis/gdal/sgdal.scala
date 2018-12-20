@@ -110,7 +110,7 @@ object sgdal {
   }
 
   def VSIGetLastErrorNo: Int = AnyRef.synchronized {
-    gdal.VSIGetLastErrorNo()
+    gdal.VSIGetLastErrorNo
   }
 
   def VSIGetLastErrorMsg: String = AnyRef.synchronized {
