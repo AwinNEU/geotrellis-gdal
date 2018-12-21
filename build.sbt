@@ -71,7 +71,7 @@ lazy val root = (project in file("."))
 
 lazy val `gdal-etl` = project
   .settings(commonSettings: _*)
-  .settings(name := "geotrellis-spark-gdal-etl")
+  .settings(name := "geotrellis-gdal-spark-etl")
   .settings(libraryDependencies ++= Seq(
     Dependencies.geotrellisSpark % Provided,
     Dependencies.geotrellisSparkEtl % Provided,
