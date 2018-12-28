@@ -18,7 +18,7 @@ import scala.util.Properties
 object Version {
   val scala           = "2.11.12"
   val crossScala      = Seq(scala, "2.12.8")
-  val geotrellis      = "3.0.0-SNAPSHOT"
+  val geotrellis      = "2.2.0"
   val gdal            = "2.3.3"
   lazy val hadoop     = Properties.envOrElse("SPARK_HADOOP_VERSION", "2.8.5")
   lazy val spark      = Properties.envOrElse("SPARK_VERSION", "2.4.0")

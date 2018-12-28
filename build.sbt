@@ -61,7 +61,8 @@ lazy val commonSettings = Seq(
     Resolver.sonatypeRepo("snapshots"),
     "locationtech-releases" at "https://repo.locationtech.org/content/groups/releases",
     "locationtech-snapshots" at "https://repo.locationtech.org/content/groups/snapshots",
-    "boundless repo" at "https://repo.boundlessgeo.com/main/"
+    "boundless repo" at "https://repo.boundlessgeo.com/main/",
+    "geotrellis-staging" at "https://oss.sonatype.org/service/local/repositories/orglocationtechgeotrellis-1009/content"
   )
 )
 
