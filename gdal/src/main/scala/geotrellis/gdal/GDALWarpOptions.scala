@@ -21,6 +21,7 @@ import geotrellis.raster.resample._
 import geotrellis.raster.io.geotiff.{AutoHigherResolution, OverviewStrategy}
 import geotrellis.proj4.CRS
 import geotrellis.vector.Extent
+import geotrellis.raster.reproject.Reproject.{Options => ReprojectOptions}
 
 import cats.implicits._
 import org.gdal.gdal.WarpOptions
@@ -69,7 +70,8 @@ case class GDALWarpOptions(
   /** -t_srs, target spatial reference set */
   targetCRS: Option[CRS] = None,
   /** -te, set georeferenced extents of output file to be created (with a CRS specified) */
-  te: Option[(Extent, CRS)] = None,
+  te: Option[Extent] = None,
+  teCrs: Option[CRS] = None,
   /** -srcnodata, set nodata masking values for input bands (different values can be supplied for each band) */
   srcNoData: List[String] = Nil,
   /** -srcnodata, set nodata masking values for output bands (different values can be supplied for each band) */
@@ -154,6 +156,43 @@ case class GDALWarpOptions(
 ) {
   lazy val name: String = toWarpOptionsList.map(_.toLowerCase).mkString("_")
 
+  /**
+    * An alternative combine methods, that ensure that GDALWarpOptions would be clamped.
+    * It allows us to reduce number of VRT objects creation, and we don't need to remember the entire list of warp operations.
+    */
+
+  def reproject(rasterExtent: RasterExtent, sourceCRS: CRS, targetCRS: CRS, reprojectOptions: ReprojectOptions = ReprojectOptions.DEFAULT): GDALWarpOptions = {
+    val re = rasterExtent.reproject(sourceCRS, targetCRS, reprojectOptions)
+
+    this.copy(
+      cellSize = re.cellSize.some,
+      targetCRS = targetCRS.some,
+      sourceCRS = sourceCRS.some,
+      resampleMethod = reprojectOptions.method.some
+    )
+  }
+
+  def resample(rasterExtent: => RasterExtent, resampleGrid: ResampleGrid): GDALWarpOptions = {
+    resampleGrid match {
+      case Dimensions(cols, rows) => this.copy(te = None, cellSize = None, dimensions = (cols, rows).some)
+      case _ =>
+        // raster extent won't be calculated if it's not called in the apply function body explicitly
+        val targetRasterExtent = resampleGrid(rasterExtent)
+        println(s"targetRasterExtent.cellSize.some: ${targetRasterExtent.cellSize}")
+        this.copy(
+          cellSize = targetRasterExtent.cellSize.some// ,
+          // te = targetRasterExtent.extent.some
+        )
+    }
+    /*this.copy(
+      alignTargetPixels = ops.alignTargetPixels,
+      te = ops.te,
+      cellSize = ops.cellSize,
+      resampleMethod = ops.resampleMethod
+    )*/
+    // null
+  }
+
   def toWarpOptionsList: List[String] = {
     outputFormat.toList.flatMap { of => List("-of", of) } :::
     resampleMethod.toList.flatMap { method => List("-r", s"${GDALUtils.deriveResampleMethodString(method)}") } :::
@@ -167,13 +206,12 @@ case class GDALWarpOptions(
       if(source != target) List("-s_srs", source.toProj4String, "-t_srs", target.toProj4String)
       else Nil
     }.toList.flatten ::: ovr.toList.flatMap { o => List("-ovr", GDALUtils.deriveOverviewStrategyString(o)) } :::
-    te.toList.flatMap { case (ext, crs) =>
-      List(
-        "-te", s"${ext.xmin}", s"${ext.ymin}", s"${ext.xmax}", s"${ext.ymax}",
-        "-te_srs", s"${crs.toProj4String}"
-      )
-    } ::: { if(srcNoData.nonEmpty) "-srcnodata" +: srcNoData else Nil } :::
     { if(dstNoData.nonEmpty) "-dstnodata" +: dstNoData else Nil } :::
+    te.toList.flatMap { ext =>
+      List("-te", s"${ext.xmin}", s"${ext.ymin}", s"${ext.xmax}", s"${ext.ymax}") :::
+        teCrs.toList.flatMap { tcrs => List("-te_srs", s"${tcrs.toProj4String}") }
+    } ::: { if(srcNoData.nonEmpty) { "-srcnodata" +: srcNoData.map(_.toString) } else Nil } :::
+    { if(dstNoData.nonEmpty) { "-dstnodata" +: srcNoData.map(_.toString) } else Nil } :::
     { if(to.nonEmpty) { "-to" +: to.map { case (k, v) => s"$k=$v" } } else Nil } :::
     { if(novShiftGrid) List("-novshiftgrid") else Nil } :::
     order.toList.flatMap { n => List("-order", s"$n") } :::
@@ -211,6 +249,7 @@ case class GDALWarpOptions(
       sourceCRS orElse that.sourceCRS,
       targetCRS orElse that.targetCRS,
       te orElse that.te,
+      teCrs orElse that.teCrs,
       { if(srcNoData.isEmpty) that.srcNoData else srcNoData },
       { if(dstNoData.isEmpty) that.dstNoData else dstNoData },
       ovr orElse that.ovr,

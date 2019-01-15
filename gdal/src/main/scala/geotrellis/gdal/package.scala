@@ -16,8 +16,10 @@
 
 package geotrellis
 
-import geotrellis.proj4.CRS
+import geotrellis.proj4.{CRS, Transform}
 import geotrellis.raster._
+import geotrellis.raster.reproject.Reproject.Options
+import geotrellis.raster.reproject.ReprojectRasterExtent
 import geotrellis.vector.Extent
 
 import org.gdal.gdal.{Band, Dataset, gdal => sgdal}
@@ -168,5 +170,17 @@ package object gdal extends Serializable {
         case _ => false
       }
     }
+  }
+
+  implicit class rasterExtentMethods(self: RasterExtent) {
+    def reproject(src: CRS, dest: CRS, options: Options): RasterExtent =
+      if(src == dest) self
+      else {
+        val transform = Transform(src, dest)
+        options.targetRasterExtent.getOrElse(ReprojectRasterExtent(self, transform, options = options))
+      }
+
+    def reproject(src: CRS, dest: CRS): RasterExtent =
+      reproject(src, dest, Options.DEFAULT)
   }
 }
