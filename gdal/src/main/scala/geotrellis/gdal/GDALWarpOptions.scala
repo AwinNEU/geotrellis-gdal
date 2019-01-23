@@ -71,7 +71,7 @@ case class GDALWarpOptions(
   targetCRS: Option[CRS] = None,
   /** -te, set georeferenced extents of output file to be created (with a CRS specified) */
   te: Option[Extent] = None,
-  teCrs: Option[CRS] = None,
+  teCRS: Option[CRS] = None,
   /** -srcnodata, set nodata masking values for input bands (different values can be supplied for each band) */
   srcNoData: List[String] = Nil,
   /** -srcnodata, set nodata masking values for output bands (different values can be supplied for each band) */
@@ -172,25 +172,18 @@ case class GDALWarpOptions(
     )
   }
 
-  def resample(rasterExtent: => RasterExtent, resampleGrid: ResampleGrid): GDALWarpOptions = {
+  def resample(gridExtent: => GridExtent, getResampleGrid: GridExtent => ResampleGrid): GDALWarpOptions = {
+    val resampleGrid = getResampleGrid(gridExtent)
+    val rasterExtent = gridExtent.toRasterExtent
     resampleGrid match {
       case Dimensions(cols, rows) => this.copy(te = None, cellSize = None, dimensions = (cols, rows).some)
-      case _ =>
-        // raster extent won't be calculated if it's not called in the apply function body explicitly
+      case TargetGrid(_) =>
         val targetRasterExtent = resampleGrid(rasterExtent)
-        println(s"targetRasterExtent.cellSize.some: ${targetRasterExtent.cellSize}")
-        this.copy(
-          cellSize = targetRasterExtent.cellSize.some// ,
-          // te = targetRasterExtent.extent.some
-        )
+        this.copy(cellSize = targetRasterExtent.cellSize.some, alignTargetPixels = true)
+      case TargetRegion(_) =>
+        val targetRasterExtent = resampleGrid(rasterExtent)
+        this.copy(cellSize = targetRasterExtent.cellSize.some)
     }
-    /*this.copy(
-      alignTargetPixels = ops.alignTargetPixels,
-      te = ops.te,
-      cellSize = ops.cellSize,
-      resampleMethod = ops.resampleMethod
-    )*/
-    // null
   }
 
   def toWarpOptionsList: List[String] = {
@@ -209,7 +202,7 @@ case class GDALWarpOptions(
     { if(dstNoData.nonEmpty) "-dstnodata" +: dstNoData else Nil } :::
     te.toList.flatMap { ext =>
       List("-te", s"${ext.xmin}", s"${ext.ymin}", s"${ext.xmax}", s"${ext.ymax}") :::
-        teCrs.toList.flatMap { tcrs => List("-te_srs", s"${tcrs.toProj4String}") }
+        teCRS.orElse(targetCRS).toList.flatMap { tcrs => List("-te_srs", s"${tcrs.toProj4String}") }
     } ::: { if(srcNoData.nonEmpty) { "-srcnodata" +: srcNoData.map(_.toString) } else Nil } :::
     { if(dstNoData.nonEmpty) { "-dstnodata" +: srcNoData.map(_.toString) } else Nil } :::
     { if(to.nonEmpty) { "-to" +: to.map { case (k, v) => s"$k=$v" } } else Nil } :::
@@ -249,7 +242,7 @@ case class GDALWarpOptions(
       sourceCRS orElse that.sourceCRS,
       targetCRS orElse that.targetCRS,
       te orElse that.te,
-      teCrs orElse that.teCrs,
+      teCRS orElse that.teCRS,
       { if(srcNoData.isEmpty) that.srcNoData else srcNoData },
       { if(dstNoData.isEmpty) that.dstNoData else dstNoData },
       ovr orElse that.ovr,

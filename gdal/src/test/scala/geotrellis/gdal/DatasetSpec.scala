@@ -7,10 +7,12 @@ import geotrellis.raster.resample.NearestNeighbor
 import geotrellis.raster.reproject.Reproject.{Options => ReprojectOptions}
 import geotrellis.vector.Extent
 import geotrellis.raster.testkit._
+
 import org.gdal.gdal.Dataset
 import cats.implicits._
 import cats.effect.{ContextShift, IO}
 import org.scalatest._
+
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -34,8 +36,8 @@ class DatasetSpec extends FunSpec with RasterMatchers with OnlyIfGdalInstalled {
     GDALWarpOptions(
       Some("VRT"),
       Some(NearestNeighbor),
-      Some(0.125),
-      Some(CellSize(19.109257071294063, 19.109257071294063)),
+      None,
+      Some(CellSize(19.1, 19.1)),
       true,
       None,
       Some(CRS.fromString("+proj=lcc +lat_1=36.16666666666666 +lat_2=34.33333333333334 +lat_0=33.75 +lon_0=-79 +x_0=609601.22 +y_0=0 +datum=NAD83 +units=m +no_defs ")),
@@ -54,7 +56,7 @@ class DatasetSpec extends FunSpec with RasterMatchers with OnlyIfGdalInstalled {
       Some("VRT"),
       Some(NearestNeighbor),
       None,
-      Some(CellSize(19.109257071294063, 19.109257071294063)),
+      Some(CellSize(19.1, 19.1)),
       true,
       None,
       None,
@@ -79,7 +81,7 @@ class DatasetSpec extends FunSpec with RasterMatchers with OnlyIfGdalInstalled {
         rasterExtent = GridExtent(Extent(630000.0, 215000.0, 645000.0, 228500.0),10.0,10.0).toRasterExtent,
         CRS.fromString("+proj=lcc +lat_1=36.16666666666666 +lat_2=34.33333333333334 +lat_0=33.75 +lon_0=-79 +x_0=609601.22 +y_0=0 +datum=NAD83 +units=m +no_defs ") ,
         WebMercator,
-        ReprojectOptions.DEFAULT.copy(targetCellSize = CellSize(19.109257071294063, 19.109257071294063).some)
+        ReprojectOptions.DEFAULT.copy(targetCellSize = CellSize(19.1, 19.1).some)
       ),
       None
     )
@@ -87,17 +89,16 @@ class DatasetSpec extends FunSpec with RasterMatchers with OnlyIfGdalInstalled {
     GDAL.warp(
       None,
       dataset,
-      GDALWarpOptions()
-        .reproject(
-          rasterExtent = GridExtent(Extent(630000.0, 215000.0, 645000.0, 228500.0),10.0,10.0).toRasterExtent,
-          CRS.fromString("+proj=lcc +lat_1=36.16666666666666 +lat_2=34.33333333333334 +lat_0=33.75 +lon_0=-79 +x_0=609601.22 +y_0=0 +datum=NAD83 +units=m +no_defs ") ,
-          WebMercator,
-          ReprojectOptions.DEFAULT.copy(targetCellSize = CellSize(19.109257071294063, 19.109257071294063).some)
-        )
-        .resample(
-          GridExtent(Extent(-8769161.632988561, 4257695.349540888, -8750625.653629405, 4274473.277249484),19.10925707129435,19.10925707129384).toRasterExtent,
-          TargetRegion(GridExtent(Extent(-8769161.632988561, 4257695.349540888, -8750625.653629405, 4274492.386506556),19.10925707129435,19.109257071293822).toRasterExtent)
-        ),
+      GDALWarpOptions().reproject(
+        rasterExtent = GridExtent(Extent(630000.0, 215000.0, 645000.0, 228500.0), 10.0, 10.0).toRasterExtent,
+        CRS.fromString("+proj=lcc +lat_1=36.16666666666666 +lat_2=34.33333333333334 +lat_0=33.75 +lon_0=-79 +x_0=609601.22 +y_0=0 +datum=NAD83 +units=m +no_defs "),
+        WebMercator,
+        ReprojectOptions.DEFAULT.copy(targetCellSize = CellSize(19.1, 19.1).some)
+      )
+      .resample(
+        GridExtent(Extent(-8769161.632988561, 4257695.349540888, -8750625.653629405, 4274473.277249484), 19.1, 19.1).toRasterExtent,
+        ge => TargetRegion(ge.toRasterExtent)
+      ),
       None
     )
 
@@ -241,38 +242,8 @@ class DatasetSpec extends FunSpec with RasterMatchers with OnlyIfGdalInstalled {
       val optimizedReproject = dsreprojectOpt(base)
       val optimizedResample = dsresampleOpt(base)
 
-      /**
-        * originalResample.rasterExtent: GridExtent(Extent(-8769161.632988561, 4257695.349540888, -8750625.653629405, 4274492.386506556),19.10925707129435,19.109257071293822)
-        * optimizedResample.rasterExtent: GridExtent(Extent(-8769161.632988561, 4257695.349540888, -8750625.653629405, 4274473.277249484),19.10925707129435,19.10925707129384)
-        */
-      println(s"originalReproject.rasterExtent: ${originalReproject.rasterExtent}")
-      println(s"optimizedReproject.rasterExtent: ${optimizedReproject.rasterExtent}")
-
-      println(s"originalResample.rasterExtent: ${originalResample.rasterExtent}")
-      println(s"optimizedResample.rasterExtent: ${optimizedResample.rasterExtent}")
-
-      val reprojetOptions = GDALWarpOptions()
-        .reproject(
-          rasterExtent = GridExtent(Extent(630000.0, 215000.0, 645000.0, 228500.0),10.0,10.0).toRasterExtent,
-          CRS.fromString("+proj=lcc +lat_1=36.16666666666666 +lat_2=34.33333333333334 +lat_0=33.75 +lon_0=-79 +x_0=609601.22 +y_0=0 +datum=NAD83 +units=m +no_defs ") ,
-          WebMercator,
-          ReprojectOptions.DEFAULT.copy(targetCellSize = CellSize(19.109257071294063, 19.109257071294063).some)
-        )
-
-      val resampleOptions = GDALWarpOptions()
-        .reproject(
-          rasterExtent = GridExtent(Extent(630000.0, 215000.0, 645000.0, 228500.0),10.0,10.0).toRasterExtent,
-          CRS.fromString("+proj=lcc +lat_1=36.16666666666666 +lat_2=34.33333333333334 +lat_0=33.75 +lon_0=-79 +x_0=609601.22 +y_0=0 +datum=NAD83 +units=m +no_defs ") ,
-          WebMercator,
-          ReprojectOptions.DEFAULT.copy(targetCellSize = CellSize(19.109257071294063, 19.109257071294063).some)
-        )
-        .resample(
-          GridExtent(Extent(-8769161.632988561, 4257695.349540888, -8750625.653629405, 4274473.277249484),19.10925707129435,19.10925707129384).toRasterExtent,
-          TargetRegion(GridExtent(Extent(-8769161.632988561, 4257695.349540888, -8750625.653629405, 4274492.386506556),19.10925707129435,19.109257071293822).toRasterExtent)
-        )
-
       originalReproject.rasterExtent shouldBe optimizedReproject.rasterExtent
-      // originalResample.rasterExtent shouldBe optimizedResample.rasterExtent
+      originalResample.rasterExtent shouldBe optimizedResample.rasterExtent
     }
   }
 }
