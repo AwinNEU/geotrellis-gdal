@@ -172,15 +172,11 @@ case class GDALWarpOptions(
     )
   }
 
-  def resample(gridExtent: => GridExtent, getResampleGrid: GridExtent => ResampleGrid): GDALWarpOptions = {
-    val resampleGrid = getResampleGrid(gridExtent)
+  def resample(gridExtent: => GridExtent, resampleGrid: ResampleGrid): GDALWarpOptions = {
     val rasterExtent = gridExtent.toRasterExtent
     resampleGrid match {
       case Dimensions(cols, rows) => this.copy(te = None, cellSize = None, dimensions = (cols, rows).some)
-      case TargetGrid(_) =>
-        val targetRasterExtent = resampleGrid(rasterExtent)
-        this.copy(cellSize = targetRasterExtent.cellSize.some, alignTargetPixels = true)
-      case TargetRegion(_) =>
+      case _ =>
         val targetRasterExtent = resampleGrid(rasterExtent)
         this.copy(cellSize = targetRasterExtent.cellSize.some)
     }

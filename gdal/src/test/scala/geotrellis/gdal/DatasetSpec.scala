@@ -75,7 +75,7 @@ class DatasetSpec extends FunSpec with RasterMatchers with OnlyIfGdalInstalled {
 
   def dsreprojectOpt(dataset: Dataset): Dataset =
     GDAL.warp(
-      None,
+      "",
       dataset,
       GDALWarpOptions().reproject(
         rasterExtent = GridExtent(Extent(630000.0, 215000.0, 645000.0, 228500.0),10.0,10.0).toRasterExtent,
@@ -87,7 +87,7 @@ class DatasetSpec extends FunSpec with RasterMatchers with OnlyIfGdalInstalled {
     )
   def dsresampleOpt(dataset: Dataset): Dataset =
     GDAL.warp(
-      None,
+      "",
       dataset,
       GDALWarpOptions().reproject(
         rasterExtent = GridExtent(Extent(630000.0, 215000.0, 645000.0, 228500.0), 10.0, 10.0).toRasterExtent,
@@ -97,7 +97,7 @@ class DatasetSpec extends FunSpec with RasterMatchers with OnlyIfGdalInstalled {
       )
       .resample(
         GridExtent(Extent(-8769161.632988561, 4257695.349540888, -8750625.653629405, 4274473.277249484), 19.1, 19.1).toRasterExtent,
-        ge => TargetRegion(ge.toRasterExtent)
+        TargetRegion(GridExtent(Extent(-8769161.632988561, 4257695.349540888, -8750625.653629405, 4274473.277249484), 19.1, 19.1).toRasterExtent)
       ),
       None
     )
