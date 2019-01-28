@@ -182,5 +182,7 @@ package object gdal extends Serializable {
 
     def reproject(src: CRS, dest: CRS): RasterExtent =
       reproject(src, dest, Options.DEFAULT)
+
+    def toGridExtent: GridExtent = GridExtent(self.extent, self.cellheight, self.cellwidth)
   }
 }

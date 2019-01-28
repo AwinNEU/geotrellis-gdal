@@ -9,10 +9,12 @@ lazy val commonSettings = Seq(
   // https://github.com/sbt/sbt-git/blob/f8caf9365be380cf101e9605af159b5e7f842d0c/src/main/scala/com/typesafe/sbt/SbtGit.scala#L173
   version := {
     // Avoid Cyclic reference involving error
-    if (git.gitCurrentTags.value.isEmpty || git.gitUncommittedChanges.value)
+    /*if (git.gitCurrentTags.value.isEmpty || git.gitUncommittedChanges.value)
       git.gitDescribedVersion.value.get + "-SNAPSHOT"
     else
-      git.gitDescribedVersion.value.get
+      git.gitDescribedVersion.value.get*/
+    
+    "0.17.12"
   },
   scalaVersion := Version.scala,
   crossScalaVersions := Version.crossScala,

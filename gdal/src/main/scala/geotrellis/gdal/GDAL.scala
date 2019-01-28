@@ -98,42 +98,8 @@ object GDAL extends LazyLogging {
   def fromGDALWarpOptions(uri: String, list: List[GDALWarpOptions]): Dataset =
     fromGDALWarpOptions(uri, list, GDAL.open(uri))
 
-  def fromGDALWarpOptions(uri: String, list: List[GDALWarpOptions], baseDataset: Dataset): Dataset = {
-    // if we want to perform warp operations
-    if (list.nonEmpty) {
-      // let's find the latest cached dataset, once we'll find smth let's stop
-      val Left(Some(dataset)) =
-        list.zipWithIndex.reverse.foldLeftM(Option.empty[Dataset]) { case (acc, (_, idx)) =>
-          acc match {
-            // successful dataset retrive, in case for some reason there is smth non empty
-            case ds @ Some(_) => Left(ds)
-
-            // we haven't read anything
-            case None =>
-              if (idx == 0) {
-                Left(Option(list.zipWithIndex.foldLeft(baseDataset) { case (ds, (ops, index)) =>
-                  warp("", ds, ops, (uri, list.take(index)).some)
-                }))
-              } else {
-                val key = {
-                  val allWarpOptions = list.take(idx + 1)
-                  val parentWarpOptions = Some((uri, allWarpOptions.take(idx)))
-                  val warpOptions = allWarpOptions.last
-
-                  s"${parentWarpOptions.name}${warpOptions.name}".md5
-                }
-                val result = cache.getIfPresent(key).map { base =>
-                  list.drop(idx).foldLeft(base) { warp("", _, _, (uri, list.drop(idx)).some) }
-                }
-                if (result.isEmpty) Right(result)
-                else Left(result)
-              }
-          }
-        }
-
-      dataset
-    } else baseDataset
-  }
+  def fromGDALWarpOptions(uri: String, list: List[GDALWarpOptions], baseDataset: Dataset): Dataset =
+    fromGDALWarpOptionsH(uri, list, baseDataset)._1
 
   def fromGDALWarpOptionsH(uri: String, list: List[GDALWarpOptions]): HDataset =
     fromGDALWarpOptionsH(uri, list, GDAL.open(uri))
