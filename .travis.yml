@@ -25,6 +25,7 @@ deploy:
   provider: script
   script: scripts/cipublish
   on:
+    tags: true
     branch:
       - develop
       - master
