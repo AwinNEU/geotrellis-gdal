@@ -33,7 +33,7 @@ class DatasetSpec extends FunSpec with RasterMatchers with OnlyIfGdalInstalled {
 
   val reprojectOptions =
     GDALWarpOptions(
-      Some("VRT"),
+      Some("MEM"),
       Some(NearestNeighbor),
       Some(0.125),
       Some(CellSize(19.109257071294063, 19.109257071294063)),
@@ -51,7 +51,7 @@ class DatasetSpec extends FunSpec with RasterMatchers with OnlyIfGdalInstalled {
 
   val resampleOptions =
     GDALWarpOptions(
-      Some("VRT"),
+      Some("MEM"),
       Some(NearestNeighbor),
       None,
       Some(CellSize(19.109257071294063, 19.109257071294063)),

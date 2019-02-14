@@ -32,7 +32,7 @@ import scala.collection.JavaConverters._
   */
 case class GDALWarpOptions(
   /** -of, Select the output format. The default is GeoTIFF (GTiff). Use the short format name. */
-  outputFormat: Option[String] = Some("VRT"),
+  outputFormat: Option[String] = Some("MEM"),
   /** -r, Resampling method to use, visit https://www.gdal.org/gdalwarp.html for details. */
   resampleMethod: Option[ResampleMethod] = None,
   /** -et, error threshold for transformation approximation */
