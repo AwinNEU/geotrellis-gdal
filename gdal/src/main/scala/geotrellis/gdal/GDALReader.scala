@@ -56,7 +56,7 @@ class GDALReader(val dataset: Dataset) {
     bufYSize: Option[Int] = None,
     bands: Seq[Int] = 0 until bandCount,
     targetCellType: Option[CellType] = None
-  ): MultibandTile = AnyRef.synchronized {
+  ): MultibandTile = {
     // NOTE: Bands are not 0-base indexed, so we must add 1// NOTE: Bands are not 0-base indexed, so we must add 1
     val baseBand = dataset.GetRasterBand(1)
 
